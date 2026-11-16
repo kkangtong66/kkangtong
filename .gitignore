@@ -1,0 +1,6 @@
+preview*.jpg
+preview*.png
+data_sample.json
+make_faces.py
+.env
+*.env

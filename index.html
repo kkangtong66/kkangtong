@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>깡통 매매일기 · 실시간 포지션</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  :root{--bg:#f6f4ee;--card:#fff;--ink:#1d1d1f;--sub:#8a8a8f;--line:#e8e5dc;--up:#e5383b;--down:#2f6fe4;--long:#14a06f;--short:#e5383b}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:Pretendard,-apple-system,sans-serif;max-width:480px;margin:0 auto;padding:20px 16px 40px}
+  header{text-align:center}
+  .title{font-size:15px;font-weight:700;color:var(--sub);letter-spacing:-.2px}
+  .hero{position:relative;margin:6px auto 0;width:210px;height:220px}
+  .hero img{width:100%;height:100%;object-fit:contain}
+  .mood{display:inline-block;margin-top:2px;padding:6px 14px;border-radius:99px;background:var(--ink);color:#fff;font-weight:800;font-size:15px}
+  .total{margin-top:14px;font-size:40px;font-weight:900;letter-spacing:-1px}
+  .totlabel{margin-top:14px;font-size:13px;font-weight:700;color:var(--sub)}
+  .totlabel+.total{margin-top:0}
+  .bal{background:var(--card);border:2px solid var(--ink);border-radius:16px;padding:14px;margin-top:16px;box-shadow:3px 3px 0 var(--ink)}
+  .bal .grid{margin-top:0;padding-top:0;border-top:0}
+  .bal .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
+  .bal .grid2 div{font-size:11px;color:var(--sub)} .bal .grid2 div b{display:block;font-size:16px;font-weight:800;margin-top:1px}
+  .chart{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line)}
+  .chart .cap{font-size:11px;color:var(--sub);display:flex;justify-content:space-between}
+  .chart svg{width:100%;height:120px;display:block;margin-top:4px}
+  .startline{font-size:12px;color:var(--sub);margin-top:10px;text-align:center}
+  .totalsub{font-size:13px;color:var(--sub);margin-top:2px}
+  h2{font-size:17px;font-weight:800;margin:28px 2px 10px;display:flex;justify-content:space-between;align-items:baseline}
+  h2 small{font-size:12px;font-weight:500;color:var(--sub)}
+  .card{background:var(--card);border:2px solid var(--ink);border-radius:16px;padding:14px 14px 12px;margin-bottom:12px;box-shadow:3px 3px 0 var(--ink)}
+  .top{display:flex;align-items:center;gap:6px}
+  .name{font-size:18px;font-weight:800}
+  .tag{font-size:11px;font-weight:800;padding:3px 7px;border-radius:6px;color:#fff}
+  .tag.LONG{background:var(--long)} .tag.SHORT{background:var(--short)}
+  .tag.lev{background:#eee;color:var(--ink)}
+  .roe{margin-left:auto;text-align:right}
+  .roe b{font-size:22px;font-weight:900;display:block;line-height:1.1}
+  .roe span{font-size:12px;font-weight:600}
+  .up{color:var(--up)} .down{color:var(--down)}
+  .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px 6px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--line)}
+  .grid div{font-size:11px;color:var(--sub)}
+  .grid div b{display:block;font-size:14px;color:var(--ink);font-weight:700;margin-top:1px}
+  .grid .liq b{color:#d97706}
+  .elapsed{font-size:11px;color:var(--sub);margin-top:10px}
+  .row{display:flex;align-items:center;gap:10px;background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:11px 12px;margin-bottom:8px}
+  .row .l{flex:1;min-width:0}
+  .row .n{font-size:15px;font-weight:800;display:flex;gap:5px;align-items:center}
+  .row .p{font-size:12px;color:var(--sub);margin-top:3px}
+  .row .r{text-align:right;font-weight:900;font-size:17px}
+  .row .r .amt{display:block;font-size:13px;font-weight:800;margin-top:1px}
+  .row .r small{display:block;font-size:11px;color:var(--sub);font-weight:500}
+  footer{margin-top:28px;font-size:11.5px;color:var(--sub);line-height:1.6;text-align:center}
+  .upd{text-align:center;font-size:12px;color:var(--sub);margin-top:6px}
+  .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#14a06f;margin-right:5px;animation:b 1.6s infinite}
+  @keyframes b{50%{opacity:.25}}
+</style>
+</head>
+<body>
+<header>
+  <div class="title">깡통의 매매일기 🥫</div>
+  <div class="hero"><img id="face" alt="깡통"></div>
+  <div class="mood" id="mood"></div>
+  <div class="totlabel">계좌 총 잔고 (선물 + 스테이킹 전부 공개)</div>
+  <div class="total" id="total"></div>
+  <div class="totalsub" id="totalsub"></div>
+  <div class="upd"><span class="dot"></span><span id="upd"></span></div>
+  <div class="upd" id="cadence">데이터는 5분마다 한번씩 갱신됩니다</div>
+  <div class="upd" id="visit" style="display:none"></div>
+</header>
+
+<div class="bal" id="bal"></div>
+
+<h2>지금 들고 있는 것 <small id="pcount"></small></h2>
+<div id="positions"></div>
+
+<h2>끝난 거래 <small id="csum"></small></h2>
+<div id="closed"></div>
+
+<footer>
+  깡통 되는 가격 = 바이낸스 강제 청산 가격<br>
+  재미로 보는 개인매매 기록입니다.<br>
+  깡통은 저 혼자 찰게요. 따라 들어오면 같이 찌그러져요 🥫
+</footer>
+
+<script>
+const FLAG={KR:'🇰🇷',US:'🇺🇸',CM:'🥇',CR:'🪙'};
+const f=(n,d=2)=>Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const pct=n=>(n>0?'+':'')+f(n,1)+'%';
+const cls=n=>n>=0?'up':'down';
+function dur(a,b=new Date()){const m=Math.max(0,(new Date(b)-new Date(a))/6e4);
+  if(m<60)return Math.round(m)+'분';const h=m/60;if(h<24)return Math.floor(h)+'시간 '+Math.round(m%60)+'분';
+  return Math.floor(h/24)+'일 '+Math.floor(h%24)+'시간';}
+function face(r){
+  if(r>=5)return['profit','오늘은 꽉 찬 깡통 ✨'];
+  if(r>=-3)return['default','멍.. (평온)'];
+  if(r>=-10)return['hold','존버 중 😤'];
+  if(r>=-30)return['stuck','물렸음..'];
+  if(r>-80)return['loss','눈물 줄줄 😭'];
+  return['liq','깡통 찼다 👻'];}
+fetch('data.json?'+Date.now()).then(r=>r.json()).then(d=>{
+  const now=new Date(d.updated);
+  const P=d.positions, pnl=P.reduce((s,p)=>s+p.pnl,0), mar=P.reduce((s,p)=>s+p.margin,0);
+  const roe=mar?pnl/mar*100:0, [img,mood]=face(roe);
+  document.getElementById('face').src='img/'+img+'.png';
+  document.getElementById('mood').textContent=mood;
+  const t=document.getElementById('total');
+  const B=d.balance;
+  const cz=n=>Math.abs(n)<0.005?'':cls(n);
+  const usd=(n,dg=0)=>(n<0?'-':'')+'$'+f(Math.abs(n),dg), sgn=(n,dg=0)=>(n>0?'+':n<0?'-':'')+'$'+f(Math.abs(n),dg);
+  if(B){
+    t.textContent=usd(B.equity);t.className='total';
+    document.getElementById('totalsub').innerHTML=`보유 포지션 수익률 <b class="${cls(roe)}">${pct(roe)}</b> · <b class="${cls(pnl)}">${sgn(pnl)}</b>`;
+    const pts=B.daily.map(x=>x.wallet), last=B.equity, all=[...pts,last];
+    const lo=Math.min(...all), hi=Math.max(...all), W=440, H=110, n=pts.length;
+    const X=i=>8+i*(W-16)/Math.max(1,n-1), Y=v=>H-10-(v-lo)/Math.max(1,hi-lo)*(H-24);
+    const line=pts.map((v,i)=>(i?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)).join(' ');
+    const area=line+` L${X(n-1).toFixed(1)} ${H} L${X(0).toFixed(1)} ${H} Z`;
+    document.getElementById('bal').innerHTML=`
+    <div class="grid">
+      <div>선물 계좌<b>${usd(B.futures??B.equity)}</b></div>
+      <div>스테이킹<b>${usd((B.earn||0)+(B.etc||0))}</b></div>
+      <div>아직 안 판 손익<b class="${cz(B.unrealized)}">${sgn(B.unrealized)}</b></div>
+    </div>
+    <div class="grid2">
+      <div>오늘 확정 손익<b class="${cz(B.today_realized)}">${sgn(B.today_realized)}</b></div>
+      <div>${d.since.slice(5,7)*1}/${d.since.slice(8,10)*1} 이후 확정 손익<b class="${cz(B.since_realized)}">${sgn(B.since_realized)}</b></div>
+    </div>
+    <div class="chart">
+      <div class="cap"><span>날짜별 잔고 (확정 손익 기준)</span><span><b style="color:#e5383b">●</b> 지금 총 잔고</span></div>
+      <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+        <path d="${area}" fill="rgba(229,56,59,.08)"/>
+        <path d="${line}" fill="none" stroke="#1d1d1f" stroke-width="2.2" stroke-linejoin="round"/>
+        <line x1="${X(n-1)}" y1="${Y(pts[n-1])}" x2="${X(n-1)}" y2="${Y(last)}" stroke="#e5383b" stroke-width="2" stroke-dasharray="4 3"/>
+        <circle cx="${X(n-1)}" cy="${Y(last)}" r="5" fill="#e5383b"/>
+      </svg>
+      <div class="cap"><span>${B.daily[0].date}</span><span>${B.daily[n-1].date}</span></div>
+    </div>
+    <div class="startline">현재 계좌 금액 <b style="color:var(--ink);font-size:17px">${usd(B.equity)}</b></div>`;
+  } else {t.textContent=pct(roe);t.className='total '+cls(roe);
+  document.getElementById('totalsub').innerHTML=`보유 포지션 합산 수익률 · <b class="${cls(pnl)}">${pnl>0?'+':''}${f(pnl)} USDT</b>`;}
+  document.getElementById('upd').textContent=now.toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})+' 기준';
+  document.getElementById('pcount').textContent=P.length+'개';
+  if(d.resting){document.getElementById('mood').textContent='지금은 쉬는 중 😴';document.getElementById('cadence').textContent='지금은 매매 쉬는 중이에요. 포지션 잡으면 다시 갱신돼요';}
+  d.closed=d.closed.filter(c=>new Date(c.closed)>=new Date(d.since)).sort((a,b)=>new Date(b.closed)-new Date(a.closed));
+  document.getElementById('positions').innerHTML=P.map(p=>{const r=p.pnl/p.margin*100;return`
+  <div class="card">
+    <div class="top"><span class="name">${p.symbol}</span>
+      <span class="tag ${p.side}">${p.side==='LONG'?'롱(오르면 이득)':'숏(내리면 이득)'}</span><span class="tag lev">${p.leverage}배</span>
+      <div class="roe ${cls(r)}"><b>${pct(r)}</b><span>${p.pnl>0?'+':''}${f(p.pnl)} USDT</span></div></div>
+    <div class="grid">
+      <div>산 가격<b>${f(p.entry)}</b></div><div>현재 가격<b>${f(p.mark)}</b></div><div class="liq">깡통 되는 가격<b>${p.liq?f(p.liq):'-'}</b></div>
+      <div>본전 가격<b>${f(p.breakEven)}</b></div><div>레버리지 포함 총액<b>${f(p.notional,0)}$</b></div><div>내가 넣은 돈<b>${f(p.margin,0)}$</b></div>
+    </div>
+    <div class="elapsed">⏱ ${p.opened?'진입 후 '+dur(p.opened,now):'진입한 지 3개월 이상'}</div>
+  </div>`}).join('');
+  {const t=d.closed.reduce((a,c)=>a+(c.pnl||0),0),w=d.closed.filter(c=>c.pnl>0).length,l=d.closed.filter(c=>c.pnl<0).length;
+   document.getElementById('csum').innerHTML=`익절 ${w} · 손절 ${l} · 합계 <b class="${cls(t)}">${t>0?'+':t<0?'-':''}$${f(Math.abs(t),0)}</b>`;}
+  document.getElementById('closed').innerHTML=d.closed.length?'':'<div class="row" style="justify-content:center;color:var(--sub);font-size:13px">아직 끝난 거래가 없어요. 깡통은 아직 버티는 중..</div>';
+  if(d.closed.length)document.getElementById('closed').innerHTML=d.closed.map(c=>`
+  <div class="row"><div class="l">
+    <div class="n">${c.symbol} <span class="tag ${c.side}">${c.side==='LONG'?'롱(오르면 이득)':'숏(내리면 이득)'}</span><span class="tag lev">${c.leverage}배</span></div>
+    <div class="p">${f(c.entry)} → ${f(c.exit)} · ${dur(c.opened,c.closed)} 보유</div></div>
+    <div class="r ${cls(c.roe)}">${pct(c.roe)}${c.pnl!=null?`<span class="amt">${c.pnl>0?'+':c.pnl<0?'-':''}$${f(Math.abs(c.pnl),0)}</span>`:''}<small>${new Date(c.closed).toLocaleDateString('ko-KR',{month:'numeric',day:'numeric'})}</small></div></div>`).join('');
+});
+// 오늘 방문자 수 (무료 카운터 API, 같은 기기는 하루 1번만 집계)
+// 무료 서버가 가끔 느려서(최대 9초) 마지막 값을 먼저 보여주고, 시간 제한 + 재시도
+(function(){
+  const day=new Date(Date.now()+9*3600e3).toISOString().slice(0,10);
+  const key='visit-'+day, el=document.getElementById('visit');
+  const show=v=>{el.textContent='👀 오늘 '+Number(v).toLocaleString()+'명이 깡통 구경함'; el.style.display='';};
+  const cache=JSON.parse(localStorage.getItem('kk_visit_v')||'null');
+  if(cache&&cache.day===day)show(cache.v);
+  const seen=localStorage.getItem('kk_visit')===day;
+  function load(mode,tries){
+    const ctl=new AbortController(), t=setTimeout(()=>ctl.abort(),12000);
+    fetch('https://abacus.jasoncameron.dev/'+mode+'/kkangtong66/'+key,{signal:ctl.signal,cache:'no-store'})
+      .then(r=>r.json()).then(j=>{ clearTimeout(t); if(!j||j.value==null)throw 0;
+        if(mode==='hit')localStorage.setItem('kk_visit',day);
+        localStorage.setItem('kk_visit_v',JSON.stringify({day,v:j.value})); show(j.value); })
+      .catch(()=>{ clearTimeout(t); if(tries>0)setTimeout(()=>load(mode,tries-1),1500); });
+  }
+  load(seen?'get':'hit',2);
+})();
+</script>
+</body>
+</html>
